@@ -3,7 +3,7 @@
 # 实现一个简单的爬虫，爬取百度贴吧图片
 import urllib.request
 import re
-
+from bs4 import BeautifulSoup
 from DownloadPagePic import *
 
 def getUrlList(url):
@@ -41,5 +41,18 @@ def getUrls(html):
     urls = re.findall(urlReg, htmlContent[0]);
     return urls;
 
+
+def getUrlsByBS(html):
+    soup = BeautifulSoup(html, "html.parser")
+    # print(soup.find(id="thread_list"))
+    # content = soup.find(id="thread_list")
+    print(soup.find(id="thread_list").find('a'));
+    # for link in soup.find_all('a'):
+    #     print(link.get('href'))
+
+
+
 if __name__ == '__main__':
-    getUrlList("http://tieba.baidu.com/f?kw=%E6%91%84%E5%BD%B1");
+    dp = DownloadPagePic();
+    html = dp.getHtmlContent("http://tieba.baidu.com/f?kw=%E6%91%84%E5%BD%B1");
+    getUrlsByBS(html);
