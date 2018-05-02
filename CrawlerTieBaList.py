@@ -46,9 +46,16 @@ def getUrlsByBS(html):
     soup = BeautifulSoup(html, "html.parser")
     # print(soup.find(id="thread_list"))
     # content = soup.find(id="thread_list")
-    print(soup.find(id="thread_list").find('a'));
-    # for link in soup.find_all('a'):
-    #     print(link.get('href'))
+    # print(soup.find(id='thread_list').find_all('threadlist_title pull_left j_th_tit > a'));
+    print(soup.find_all('div', attrs={'class':'threadlist_title pull_left j_th_tit '}));
+    divs = soup.find_all('div', attrs={'class': 'threadlist_title pull_left j_th_tit '})
+    print('------');
+    count = 0;
+    for div in divs:
+        count = count + 1;
+        print(div.find('a').get('href'));
+
+    print(count);
 
 
 
