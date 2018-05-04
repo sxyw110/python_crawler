@@ -4,6 +4,7 @@
 import urllib.request
 import re
 import os, sys
+from bs4 import BeautifulSoup
 
 class DownloadPagePic :
     path = '';
@@ -28,6 +29,20 @@ class DownloadPagePic :
             print("error:url:"+self.url);
             jpgs = [];
 
+        return jpgs
+
+    # 从html中解析出所有jpg图片的url
+    # 百度贴吧html中jpg图片的url格式为：<img ... src="XXX.jpg" width=...>
+    def getJPGsByBS(self, html):
+        soup = BeautifulSoup(html, "html.parser");
+        imgs = soup.find_all('img', class_="BDE_Image");
+        
+        jpgs =[];
+        for img in imgs:
+            jpgs.append(img.get('src'));
+
+        print(jpgs);
+        print( len(jpgs));
         return jpgs
 
     def mkdirs(self,path):
@@ -55,7 +70,7 @@ class DownloadPagePic :
         count = 1
         self.mkdirs(path);
         for url in imgUrls:
-            self.downloadJPG(url, ''.join([path, '\\{0}.jpg'.format(count)]))
+            self.downloadJPG(url, ''.join([path, '_{0}.jpg'.format(count)]))
             count = count + 1
 
 
@@ -64,6 +79,12 @@ class DownloadPagePic :
         html = self.getHtmlContent(self.url);
         jpgs = self.getJPGs(html);
         self.batchDownloadJPGs(jpgs,self.path)
+
+    # 封装：从百度贴吧网页下载图片
+    def downloadByBS(self):
+        html = self.getHtmlContent(self.url);
+        jpgs = self.getJPGsByBS(html);
+        self.batchDownloadJPGs(jpgs, self.path)
 
     def setPath(self,path):
         self.path = path;
@@ -83,4 +104,5 @@ class DownloadPagePic :
 
 if __name__ == '__main__':
     dp = DownloadPagePic();
-    os.makedirs('D:\\crawler\\p\\222')
+    html = dp.getHtmlContent("https://tieba.baidu.com/p/5682809370");
+    dp.getJPGsByBS(html);

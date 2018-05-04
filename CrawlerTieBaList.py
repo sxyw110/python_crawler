@@ -26,6 +26,26 @@ def getUrlList(url):
 
     # html = html.decode
 
+def getUrlListByBS(url):
+    dp = DownloadPagePic();
+    html = dp.getHtmlContent(url);
+    # print(html);
+    urls = getUrlsByBS(html);
+
+
+    print(urls);
+
+    urlPre = "http://tieba.baidu.com";
+    pathPre = "D://crawler";
+
+    for url in urls:
+        dp.setPath(pathPre + url);
+        dp.setUrl(urlPre + url);
+        dp.downloadByBS();
+
+
+    # html = html.decode
+
 
 def getUrls(html):
 
@@ -50,16 +70,18 @@ def getUrlsByBS(html):
     print(soup.find_all('div', attrs={'class':'threadlist_title pull_left j_th_tit '}));
     divs = soup.find_all('div', attrs={'class': 'threadlist_title pull_left j_th_tit '})
     print('------');
-    count = 0;
-    for div in divs:
-        count = count + 1;
-        print(div.find('a').get('href'));
 
-    print(count);
+    urls = [];
+    for div in divs:
+        urls.append(div.find('a').get('href'))
+        print(urls);
+
+    return urls;
+
 
 
 
 if __name__ == '__main__':
-    dp = DownloadPagePic();
-    html = dp.getHtmlContent("http://tieba.baidu.com/f?kw=%E6%91%84%E5%BD%B1");
-    getUrlsByBS(html);
+    # dp = DownloadPagePic();
+    # html = dp.getHtmlContent("http://tieba.baidu.com/f?kw=%E6%91%84%E5%BD%B1");
+    getUrlListByBS("http://tieba.baidu.com/f?kw=%E6%91%84%E5%BD%B1");
