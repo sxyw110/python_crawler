@@ -7,12 +7,12 @@ import os, sys
 from bs4 import BeautifulSoup
 import hashlib
 import base64
+import time
 
 class JanDanCrawler:
     path = '';
     url = "";
 
-    # 根据url获取网页html内容
     def getHtmlContent(self,url):
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
         req = urllib.request.Request(url=url, headers=headers)
@@ -21,20 +21,17 @@ class JanDanCrawler:
 
 
 
-    # 从html中解析出所有jpg图片的url
-    # 百度贴吧html中jpg图片的url格式为：<img ... src="XXX.jpg" width=...>
-    def getJPGsByBS(self, html):
+    def getJPGCodesByBS(self, html):
         soup = BeautifulSoup(html, "html.parser");
         print(soup);
-        imgs = soup.find_all('a',class_="view_img_link");
+        spans = soup.find_all('span',class_="img-hash");
         
-        jpgs =[];
-        for img in imgs:
-            jpgs.append(img.get('href'));
-
-        print(jpgs);
-        print( len(jpgs));
-        return jpgs
+        jpgCodes =[];
+        for span in spans:
+            jpgCodes.append(span.string);
+        print(jpgCodes);
+        print( len(jpgCodes));
+        return jpgCodes;
 
     def mkdirs(self,path):
 
@@ -55,23 +52,21 @@ class JanDanCrawler:
             print(imgUrl + ";" + fileName);
 
 
-    # 批量下载图片，默认保存到当前目录下
-    def batchDownloadJPGs(self,imgUrls, path='D://crawler//'):
+    def batchDownloadJPGs(self,imgUrls,pageNO, path='D://crawler//'):
         # 用于给图片命名
         count = 1
         self.mkdirs(path);
         for url in imgUrls:
-            self.downloadJPG(url, ''.join([path, '_{0}.jpg'.format(count)]))
+            self.downloadJPG(url, ''.join([path, '{1}_{0}.jpg'.format(count,base64.b64encode(url.encode("utf-8")))]))
             count = count + 1
+            time.sleep(0.1);
 
 
-    # 封装：从百度贴吧网页下载图片
     def download(self):
         html = self.getHtmlContent(self.url);
         jpgs = self.getJPGs(html);
         self.batchDownloadJPGs(jpgs,self.path)
 
-    # 封装：从百度贴吧网页下载图片
     def downloadByBS(self):
         html = self.getHtmlContent(self.url);
         jpgs = self.getJPGsByBS(html);
@@ -86,52 +81,55 @@ class JanDanCrawler:
     def testMethod(self):
         print("aa");
 
-    def jiandanDecode(m, r, d):
-        # r = r ? r: "";
-        # d = d ? d: 0;
-        d = 0;
-        q = 4;
-        r = hashlib.md5(r);
-        o = hashlib.md5(r.substr(0, 16));
-        n = hashlib.md5(r.substr(16, 16));
+    def parse(self,imgHash, constant):
+        q = 4
+        hashlib.md5()
+        constant = self.md5(constant)
+        o = self.md5(constant[0:16])
+        n = self.md5(constant[16:32])
+        l = imgHash[0:q]
+        c = o + self.md5(o + l)
+        imgHash = imgHash[q:]
+        k = self.decode_base64(imgHash)
+        h = list(range(256))
 
-        l = m.substr(0, q);
-        c = o + hashlib.md5(o + l);
+        b = list(range(256))
 
-        m = m.substr(q);
-        k = base64.b64decode(m);
+        for g in range(0, 256):
+            b[g] = ord(c[g % len(c)])
 
-        h = [];
-        # for (g = 0; g < 256; g++) {
-        for g in range(256):
-            h[g] = g
-
-        b = [];
-        for g in range(256):
-            b[g] = c.charCodeAt(g % c.length)
-
-
-        for g in range(256):
-            f = g;
-            f = (f + h[g] + b[g]) % 256;
-            tmp = h[g];
-            h[g] = h[f];
+        f = 0
+        for g in range(0, 256):
+            f = (f + h[g] + b[g]) % 256
+            tmp = h[g]
+            h[g] = h[f]
             h[f] = tmp
 
-        t = "";
-        k = k.split("");
-        for  g in range(k.length):
-            p = f = g
+        print(k);
+        print(g);
+        result = ""
+        p = 0
+        f = 0
+        for g in range(0, len(k)):
             p = (p + 1) % 256;
-            f = (f + h[p]) % 256;
-            tmp = h[p];
-            h[p] = h[f];
-            h[f] = tmp;
-            t += chr(ord(k[g]) ^ (h[(h[p] + h[f]) % 256]))
+            f = (f + h[p]) % 256
+            tmp = h[p]
+            h[p] = h[f]
+            h[f] = tmp
+            result += chr(k[g] ^ (h[(h[p] + h[f]) % 256]))
+        result = result[26:]
+        return result
 
-        t = t.substr(26)
-        return t;
+    def md5(self,value):
+        m2 = hashlib.md5()
+        m2.update(value.encode("utf-8"));
+        return m2.hexdigest();
 
+    def decode_base64(self,data):
+        missing_padding = 4 - len(data) % 4
+        if missing_padding:
+            data += '=' * missing_padding
+        return base64.b64decode(data)
 
 # dp = DownloadPagePic();
 # dp.testMethod();
@@ -140,7 +138,27 @@ class JanDanCrawler:
     #     download(url)
 
 
+    def downloadPic(self,pageNO):
+        url = "https://jandan.net/ooxx/page-"+str(pageNO)+"#comments";
+
+        html = dp.getHtmlContent(url);
+        imgCode = dp.getJPGCodesByBS(html);
+
+        imgUrls = [];
+        for code in imgCode:
+            url = dp.parse(code, "H5C7UxNkap5ZxckFrL8PSljODZxgpH37");
+            imgUrls.append("http:" + url.replace("mw600", "large"));
+        print(imgUrls);
+        dp.batchDownloadJPGs(imgUrls,pageNO);
+
 if __name__ == '__main__':
     dp = JanDanCrawler();
-    html = dp.getHtmlContent("https://jandan.net/ooxx");
-    dp.getJPGsByBS(html);
+
+    page = 65;
+    size = 10;
+
+    for current in range((page -size),page):
+        dp.downloadPic(current);
+        time.sleep(3);
+
+
