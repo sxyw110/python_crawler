@@ -26,6 +26,18 @@ class MysqlUtils:
             db.rollback()
 
     @classmethod
+    def isExsitByUrl(self,url):
+        cursor = db.cursor();
+        sql = "select count(*) from jiandan_url where url='"+url+"' ";
+        cursor.execute(sql);
+        result = cursor.fetchone()[0];
+        if result >= 1:
+            return True;
+        else:
+            return False;
+
+
+    @classmethod
     def closeDB(self):
         # 关闭数据库连接
         db.close()
@@ -33,4 +45,7 @@ class MysqlUtils:
 
 if __name__ == '__main__':
     MysqlUtils.initDB();
+    url= "https://ws3.sinaimg.cn/large/006wUWIjgy1ftalns5zjhg30aq07o1ky.gif";
+    print(MysqlUtils.isExsitByUrl(url));
+
     MysqlUtils.closeDB();

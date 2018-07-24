@@ -2,6 +2,8 @@
 import urllib
 
 import io
+
+import time
 from PIL import Image
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -39,6 +41,7 @@ class ChromeHeadless:
                 preElement = driver.find_element_by_class_name("previous-comment-page");
                 url = preElement.get_attribute("href");
                 print("next url:"+ url);
+                time.sleep(3);
             except NoSuchElementException:
                 break;
 
@@ -50,6 +53,12 @@ class ChromeHeadless:
         elements = driver.find_elements_by_class_name("view_img_link");
         for element in elements:
             url = element.get_attribute("href");
+
+            isExits = MysqlUtils.isExsitByUrl(url);
+
+            if isExits:
+                continue;
+
             print("start dowload:"+ url);
             file = urllib.request.urlopen(url)
             tmpIm = io.BytesIO(file.read())
